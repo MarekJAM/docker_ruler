@@ -51,9 +51,12 @@ MyApplet.prototype = {
         ));
       } else {
         for (var i = 0; i < containers.length; i++) {
+          let container = containers[i];
           let item = new PopupMenu.PopupMenuItem(containers[i].image);
           item.connect('activate', Lang.bind(this, function () {
-            //  Main.Util.spawnCommandLine("gnome-terminal -e 'sh -c \"echo "+test.names+"; sleep 10; exec bash\"\'");
+            if (container.status.substring(0, 2) == 'Up') {
+              Main.Util.spawnCommandLine("gnome-terminal -e 'sh -c \"docker exec -it " + container.names + " /bin/bash ; $SHELL\"\'");
+            }
           }));
           this.menu.addMenuItem(item);
 
