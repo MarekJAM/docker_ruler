@@ -42,9 +42,15 @@ MyApplet.prototype = {
       this._contentSection = new PopupMenu.PopupMenuSection();
       this.menu.addMenuItem(this._contentSection);
 
+      
+
       this.docker = new Docker.Docker();
 
       let containers = this.docker.listContainers();
+
+      this.subMenuContainers = new PopupMenu.PopupSubMenuMenuItem('Containers');
+      this.menu.addMenuItem(this.subMenuContainers);
+    
       if (containers.length == 0) {
         this.menu.addMenuItem(new PopupMenu.PopupMenuItem(
           'No containers found.',
@@ -52,14 +58,13 @@ MyApplet.prototype = {
       } else {
         for (var i = 0; i < containers.length; i++) {
           let container = containers[i];
-          let item = new PopupMenu.PopupMenuItem(containers[i].image);
+          let item = new PopupMenu.PopupMenuItem(containers[i].names);
           item.connect('activate', Lang.bind(this, function () {
             if (container.status.substring(0, 2) == 'Up') {
               Main.Util.spawnCommandLine("gnome-terminal -e 'sh -c \"docker exec -it " + container.names + " /bin/bash ; $SHELL\"\'");
             }
           }));
-          this.menu.addMenuItem(item);
-
+          this.subMenuContainers.menu.addMenuItem(item);
         }
       }
     }
