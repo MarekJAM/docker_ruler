@@ -30,47 +30,47 @@ MyApplet.prototype = {
     this._msgsource = new MessageTray.SystemNotificationSource("Docker Ruler");
     Main.messageTray.add(this._msgsource);
 
+    this.set_applet_icon_name("inactive");
+    this.set_applet_tooltip("Control docker containers");
 
-    try {
-      this.set_applet_icon_name("inactive");
-      this.set_applet_tooltip("Control docker containers");
+    this.menuManager = new PopupMenu.PopupMenuManager(this);
+    this.menu = new Applet.AppletPopupMenu(this, orientation);
+    this.menuManager.addMenu(this.menu);
 
-      this.menuManager = new PopupMenu.PopupMenuManager(this);
-      this.menu = new Applet.AppletPopupMenu(this, orientation);
-      this.menuManager.addMenu(this.menu);
+    this._contentSection = new PopupMenu.PopupMenuSection();
+    this.menu.addMenuItem(this._contentSection);
 
-      this._contentSection = new PopupMenu.PopupMenuSection();
-      this.menu.addMenuItem(this._contentSection);
+    this.docker = new Docker.Docker();
+    this.refreshApplet();
+  },
 
-      
+  refreshApplet: function () {
+    this.menu.removeAll();
+    let containers = this.docker.listContainers();
 
-      this.docker = new Docker.Docker();
+    this.subMenuContainers = new PopupMenu.PopupSubMenuMenuItem('Containers');
+    this.menu.addMenuItem(this.subMenuContainers);
 
-      let containers = this.docker.listContainers();
-
-      this.subMenuContainers = new PopupMenu.PopupSubMenuMenuItem('Containers');
-      this.menu.addMenuItem(this.subMenuContainers);
-    
-      if (containers.length == 0) {
-        this.menu.addMenuItem(new PopupMenu.PopupMenuItem(
-          'No containers found.',
-        ));
-      } else {
-        for (var i = 0; i < containers.length; i++) {
-          let container = containers[i];
-          let item = new PopupMenu.PopupIconMenuItem(_(container.names), (container.status.substring(0, 2) == 'Up') ? "emblem-default" : "media-playback-stop", St.IconType.FULLCOLOR);
-          item.connect('activate', Lang.bind(this, function () {
-            if (container.status.substring(0, 2) == 'Up') {
-              Main.Util.spawnCommandLine("gnome-terminal -e 'sh -c \"docker exec -it " + container.names + " /bin/bash ; $SHELL\"\'");
-            }
-          }));
-          this.subMenuContainers.menu.addMenuItem(item);
-        }
+    if (containers.length == 0) {
+      this.menu.addMenuItem(new PopupMenu.PopupMenuItem(
+        'No containers found.',
+      ));
+    } else {
+      for (var i = 0; i < containers.length; i++) {
+        let container = containers[i];
+        let item = new PopupMenu.PopupIconMenuItem(_(container.names), (container.status.substring(0, 2) == 'Up') ? "emblem-default" : "media-playback-stop", St.IconType.FULLCOLOR);
+        item.connect('activate', Lang.bind(this, function () {
+          if (container.status.substring(0, 2) == 'Up') {
+            Main.Util.spawnCommandLine("gnome-terminal -e 'sh -c \"docker exec -it " + container.names + " /bin/bash ; $SHELL\"\'");
+          }
+        }));
+        this.subMenuContainers.menu.addMenuItem(item);
       }
     }
-    catch (e) {
-      global.logError(e);
-    }
+
+    let refreshButton = new PopupMenu.PopupIconMenuItem(_('Refresh'), 'view-refresh', St.IconType.FULLCOLOR);
+    refreshButton.connect('activate', Lang.bind(this, this.refreshApplet));
+    this.menu.addMenuItem(refreshButton);
   },
 
   on_applet_clicked: function (event) {
