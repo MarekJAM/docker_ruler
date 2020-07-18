@@ -56,4 +56,8 @@ Docker.prototype = {
         }
         return lines;
     },
+
+    openInTerminal: function(containerName, entryPoint) {
+        Main.Util.spawnCommandLine("gnome-terminal -e 'sh -c \"docker exec -it " + containerName +" "+ entryPoint +"  ; $SHELL\"\'");
+    },
 };

@@ -61,7 +61,7 @@ MyApplet.prototype = {
         let item = new PopupMenu.PopupIconMenuItem(_(container.names), (container.status.substring(0, 2) == 'Up') ? "emblem-default" : "media-playback-stop", St.IconType.FULLCOLOR);
         item.connect('activate', Lang.bind(this, function () {
           if (container.status.substring(0, 2) == 'Up') {
-            Main.Util.spawnCommandLine("gnome-terminal -e 'sh -c \"docker exec -it " + container.names + " /bin/bash ; $SHELL\"\'");
+            this.docker.openInTerminal(container.names, '/bin/sh');
           }
         }));
         this.subMenuContainers.menu.addMenuItem(item);
