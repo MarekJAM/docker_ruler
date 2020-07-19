@@ -10,14 +10,14 @@ function Docker() {
 }
 
 Docker.prototype = {
-    _init: function() {
+    _init: function () {
     },
 
     listContainers: function () {
         return this.colCommand('ps -a');
     },
 
-    parseColumnMetadata: function(original_row) {
+    parseColumnMetadata: function (original_row) {
         let row = original_row;
         let last_reduction = '';
         while (row != last_reduction) {
@@ -25,7 +25,7 @@ Docker.prototype = {
             row = row.replace(/   /gi, '  ');
         }
         let positions = [];
-        row.split('  ').forEach(function(element) {
+        row.split('  ').forEach(function (element) {
             positions.push({
                 name: element,
                 position: original_row.match(element).index,
@@ -38,7 +38,7 @@ Docker.prototype = {
         return positions;
     },
 
-    colCommand: function(command) {
+    colCommand: function (command) {
         let [res, list, err, status] = GLib.spawn_command_line_sync('docker' + ' ' + command);
         let output_lines = list.toString().split('\n');
         let columns = this.parseColumnMetadata(output_lines[0]);
@@ -57,7 +57,14 @@ Docker.prototype = {
         return lines;
     },
 
-    openInTerminal: function(containerName, entryPoint) {
-        Main.Util.spawnCommandLine("gnome-terminal -e 'sh -c \"docker exec -it " + containerName +" "+ entryPoint +"  ; $SHELL\"\'");
+    openInTerminal: function (containerName, entryPoint) {
+        Main.Util.spawnCommandLine("gnome-terminal -e 'sh -c \"docker exec -it " + containerName + " " + entryPoint + "  ; $SHELL\"\'");
+    },
+
+    isContainerRunning: function (status) {
+        if (status.substring(0, 2) == 'Up') {
+            return true;
+        }
+        return false;
     },
 };

@@ -12,6 +12,7 @@ if (typeof require !== 'undefined') {
 } else {
   Docker = imports.ui.appletManager.applets[UUID].docker;
 }
+let isAnyContainerRunning;
 
 function ConfirmDialog() {
   this._init();
@@ -29,8 +30,8 @@ MyApplet.prototype = {
 
     this._msgsource = new MessageTray.SystemNotificationSource("Docker Ruler");
     Main.messageTray.add(this._msgsource);
-
     this.set_applet_icon_name("inactive");
+
     this.set_applet_tooltip("Control docker containers");
 
     this.menuManager = new PopupMenu.PopupMenuManager(this);
@@ -47,6 +48,7 @@ MyApplet.prototype = {
   refreshApplet: function () {
     this.menu.removeAll();
     let containers = this.docker.listContainers();
+    this.isAnyContainerRunning = false;
 
     this.subMenuContainers = new PopupMenu.PopupSubMenuMenuItem('Containers');
     this.menu.addMenuItem(this.subMenuContainers);
@@ -58,19 +60,24 @@ MyApplet.prototype = {
     } else {
       for (var i = 0; i < containers.length; i++) {
         let container = containers[i];
-        let item = new PopupMenu.PopupIconMenuItem(_(container.names), (container.status.substring(0, 2) == 'Up') ? "emblem-default" : "media-playback-stop", St.IconType.FULLCOLOR);
-        item.connect('activate', Lang.bind(this, function () {
+        this.subMenuContainers.menu.addMenuItem(this.createPopupIconMenuItem(_(container.names), (container.status.substring(0, 2) == 'Up') ? "emblem-default" : "media-playback-stop", function () {
           if (container.status.substring(0, 2) == 'Up') {
             this.docker.openInTerminal(container.names, '/bin/sh');
           }
         }));
-        this.subMenuContainers.menu.addMenuItem(item);
+
+        if (this.docker.isContainerRunning) {
+          this.isAnyContainerRunning = true;
+        }
       }
     }
 
-    let refreshButton = new PopupMenu.PopupIconMenuItem(_('Refresh'), 'view-refresh', St.IconType.FULLCOLOR);
-    refreshButton.connect('activate', Lang.bind(this, this.refreshApplet));
-    this.menu.addMenuItem(refreshButton);
+    if (this.isAnyContainerRunning) {
+      this.set_applet_icon_name("active");
+    } else {
+      this.set_applet_icon_name("inactive");
+    }
+    this.menu.addMenuItem(this.createPopupIconMenuItem(_('Refresh'), 'view-refresh', this.refreshApplet));
   },
 
   on_applet_clicked: function (event) {
@@ -80,6 +87,14 @@ MyApplet.prototype = {
   notification: function (message) {
     let notification = new MessageTray.Notification(this._msgsource, "Docker Ruler", message);
     this._msgsource.notify(notification);
+  },
+
+  createPopupIconMenuItem: function (label, icon, callback) {
+    let item = new PopupMenu.PopupIconMenuItem(label, icon, St.IconType.FULLCOLOR);
+    if (callback) {
+      item.connect("activate", Lang.bind(this, callback));
+    }
+    return item;
   },
 };
 
