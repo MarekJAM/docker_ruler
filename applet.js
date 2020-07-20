@@ -66,7 +66,7 @@ MyApplet.prototype = {
           }
         }));
 
-        if (this.docker.isContainerRunning) {
+        if (this.docker.isContainerRunning(container.status)) {
           this.isAnyContainerRunning = true;
         }
       }
