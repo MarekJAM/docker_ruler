@@ -67,4 +67,22 @@ Docker.prototype = {
         }
         return false;
     },
+
+    startContainer: function (container_id) {
+        try {
+            GLib.spawn_command_line_sync('docker start ' + container_id);
+        } catch (e) {
+            global.log(e);
+        }
+        return true;
+    },
+
+    stopContainer: function(container_id) {
+        try {
+            GLib.spawn_command_line_sync('docker stop ' + container_id);
+        } catch(e) {
+            global.log(e);
+        }
+        return true;
+    },
 };

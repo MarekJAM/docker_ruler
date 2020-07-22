@@ -62,7 +62,10 @@ MyApplet.prototype = {
         let container = containers[i];
         this.subMenuContainers.menu.addMenuItem(this.createPopupIconMenuItem(_(container.names), (container.status.substring(0, 2) == 'Up') ? "emblem-default" : "media-playback-stop", function () {
           if (container.status.substring(0, 2) == 'Up') {
-            this.docker.openInTerminal(container.names, '/bin/sh');
+            // this.docker.openInTerminal(container.names, '/bin/sh');
+            this.docker.stopContainer(container.names);
+          } else {
+            this.docker.startContainer(container.names);
           }
         }));
 
