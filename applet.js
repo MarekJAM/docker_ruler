@@ -60,16 +60,13 @@ MyApplet.prototype = {
     } else {
       for (var i = 0; i < containers.length; i++) {
         let container = containers[i];
-        this.subMenuContainers.menu.addMenuItem(this.createPopupIconMenuItem(_(container.names), (container.status.substring(0, 2) == 'Up') ? "emblem-default" : "media-playback-stop", function () {
-          if (container.status.substring(0, 2) == 'Up') {
-            // this.docker.openInTerminal(container.names, '/bin/sh');
-            this.docker.stopContainer(container.names);
-          } else {
-            this.docker.startContainer(container.names);
-          }
+        let isRunning = (this.docker.isContainerRunning(container.status));
+        this.subMenuContainers.menu.addMenuItem(this.createPopupIconMenuItem(_(container.names), isRunning ? "emblem-default" : "media-playback-stop", function () {
+          // this.docker.openInTerminal(container.names, '/bin/sh');
+          this.switchContainerStatus(isRunning, container.names);
         }));
 
-        if (this.docker.isContainerRunning(container.status)) {
+        if (isRunning) {
           this.isAnyContainerRunning = true;
         }
       }
@@ -87,7 +84,7 @@ MyApplet.prototype = {
     this.menu.toggle();
   },
 
-  notification: function (message) {
+  showNotification: function (message) {
     let notification = new MessageTray.Notification(this._msgsource, "Docker Ruler", message);
     this._msgsource.notify(notification);
   },
@@ -98,6 +95,18 @@ MyApplet.prototype = {
       item.connect("activate", Lang.bind(this, callback));
     }
     return item;
+  },
+
+  switchContainerStatus: function (isRunning, name) {
+    if (isRunning) {
+      this.docker.stopContainer(name);
+      this.showNotification(_('Container ' + name + ' stopped'));
+      this.refreshApplet();
+    } else {
+      this.docker.startContainer(name);
+      this.showNotification(_('Container ' + name + ' started'));
+      this.refreshApplet();
+    }
   },
 };
 

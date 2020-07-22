@@ -68,18 +68,18 @@ Docker.prototype = {
         return false;
     },
 
-    startContainer: function (container_id) {
+    startContainer: function (container_name) {
         try {
-            GLib.spawn_command_line_sync('docker start ' + container_id);
+            GLib.spawn_command_line_sync('docker start ' + container_name);
         } catch (e) {
             global.log(e);
         }
         return true;
     },
 
-    stopContainer: function(container_id) {
+    stopContainer: function(container_name) {
         try {
-            GLib.spawn_command_line_sync('docker stop ' + container_id);
+            GLib.spawn_command_line_sync('docker stop ' + container_name);
         } catch(e) {
             global.log(e);
         }
