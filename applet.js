@@ -4,7 +4,7 @@ const St = imports.gi.St;
 const Main = imports.ui.main;
 const MessageTray = imports.ui.messageTray;
 const PopupMenu = imports.ui.popupMenu;
-const UUID = 'docker@marekjam';
+const UUID = 'dockerruler@marekjam';
 
 let Docker;
 if (typeof require !== 'undefined') {
