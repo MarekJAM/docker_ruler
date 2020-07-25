@@ -54,10 +54,11 @@ MyApplet.prototype = {
     this.menu.addMenuItem(this.subMenuContainers);
 
     if (containers.length == 0) {
-      this.menu.addMenuItem(new PopupMenu.PopupMenuItem(
-        'No containers found.',
+      this.subMenuContainers.menu.addMenuItem(this.createPopupMenuItem(
+        _('No containers found.')
       ));
-    } else {
+    }
+    else {
       for (var i = 0; i < containers.length; i++) {
         let container = containers[i];
         let isRunning = (this.docker.isContainerRunning(container.status));
@@ -95,6 +96,14 @@ MyApplet.prototype = {
       item.connect("activate", Lang.bind(this, callback));
     }
     return item;
+  },
+
+  createPopupMenuItem: function (label, callback) {
+    let newItem = new PopupMenu.PopupMenuItem(label);
+    if (callback) {
+      newItem.connect("activate", Lang.bind(this, callback));
+    }
+    return newItem;
   },
 
   switchContainerStatus: function (isRunning, name) {
