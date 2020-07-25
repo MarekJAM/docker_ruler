@@ -57,14 +57,17 @@ MyApplet.prototype = {
       this.subMenuContainers.menu.addMenuItem(this.createPopupMenuItem(
         _('No containers found.')
       ));
-    }
-    else {
+    } else {
       for (var i = 0; i < containers.length; i++) {
         let container = containers[i];
         let isRunning = (this.docker.isContainerRunning(container.status));
-        this.subMenuContainers.menu.addMenuItem(this.createPopupIconMenuItem(_(container.names), isRunning ? "emblem-default" : "media-playback-stop", function () {
-          // this.docker.openInTerminal(container.names, '/bin/sh');
-          this.switchContainerStatus(isRunning, container.names);
+        this.subMenuContainers.menu.addMenuItem(this.createPopupIconMenuItem(_(container.names), isRunning ? "emblem-default" : "media-playback-stop", function (actor, event) {
+          let button = event.get_button();
+          if (button == 1) {
+            this.switchContainerStatus(isRunning, container.names);
+          } else if (button == 3) {
+            this.docker.openInTerminal(container.names, "/bin/bash");
+          }
         }));
 
         if (isRunning) {
@@ -116,6 +119,17 @@ MyApplet.prototype = {
       this.showNotification(_('Container ' + name + ' started'));
       this.refreshApplet();
     }
+  },
+
+  _onContainerClicked: function (actor, event) {
+    let button = event.get_button();
+    this.showNotification(this.isRunning.toString());
+    // if (button == 3) {
+    //   this.switchContainerStatus(isRunning, container.names);
+    // } else {
+    //   this.showNotification('aaa');
+    // }
+    return true;
   },
 };
 
