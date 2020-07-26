@@ -17,6 +17,10 @@ Docker.prototype = {
         return this.colCommand('ps -a');
     },
 
+    listImages: function () {
+        return this.colCommand('image ls');
+    },
+
     parseColumnMetadata: function (original_row) {
         let row = original_row;
         let last_reduction = '';

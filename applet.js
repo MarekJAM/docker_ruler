@@ -48,10 +48,10 @@ MyApplet.prototype = {
   refreshApplet: function () {
     this.menu.removeAll();
     let containers = this.docker.listContainers();
+    let images = this.docker.listImages();
     this.isAnyContainerRunning = false;
 
     this.subMenuContainers = new PopupMenu.PopupSubMenuMenuItem('Containers');
-    this.menu.addMenuItem(this.subMenuContainers);
 
     if (containers.length == 0) {
       this.subMenuContainers.menu.addMenuItem(this.createPopupMenuItem(
@@ -81,6 +81,22 @@ MyApplet.prototype = {
     } else {
       this.set_applet_icon_name("inactive");
     }
+
+    this.subMenuImages = new PopupMenu.PopupSubMenuMenuItem('Images');
+
+    if (images.length == 0) {
+      this.subMenuImages.menu.addMenuItem(this.createPopupMenuItem(
+        _('No images found.')
+      ));
+    } else {
+      for (var i = 0; i < images.length; i++) {
+        let image = images[i];
+        this.subMenuImages.menu.addMenuItem(this.createPopupMenuItem(_(image.repository+":"+image.tag)));
+      }
+    }
+
+    this.menu.addMenuItem(this.subMenuContainers);
+    this.menu.addMenuItem(this.subMenuImages);
     this.menu.addMenuItem(this.createPopupIconMenuItem(_('Refresh'), 'view-refresh', this.refreshApplet));
   },
 
