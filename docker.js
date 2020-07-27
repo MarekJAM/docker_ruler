@@ -89,4 +89,13 @@ Docker.prototype = {
         }
         return true;
     },
+
+    pullImage: function (image_data) {
+        try {
+            GLib.spawn_command_line_sync('docker pull ' + image_data);
+        } catch (e) {
+            global.log(e);
+        }
+        return true;
+    },
 };

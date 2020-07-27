@@ -146,18 +146,7 @@ MyApplet.prototype = {
   },
 
   openDialog: function () {
-    let dialog = new NewImageDialog(Lang.bind(this, function () { }));
-  },
-
-  _onContainerClicked: function (actor, event) {
-    let button = event.get_button();
-    this.showNotification(this.isRunning.toString());
-    // if (button == 3) {
-    //   this.switchContainerStatus(isRunning, container.names);
-    // } else {
-    //   this.showNotification('aaa');
-    // }
-    return true;
+    let dialog = new NewImageDialog(this.docker);
   },
 };
 
@@ -169,11 +158,12 @@ function NewImageDialog() {
 NewImageDialog.prototype = {
   __proto__: ModalDialog.ModalDialog.prototype,
 
-  _init: function (aCallback) {
+  _init: function (docker) {
     ModalDialog.ModalDialog.prototype._init.call(this, {
       styleClass: null
     });
-    this._callback = aCallback;
+    this._docker = docker;
+    // this._showNotification = showNotification;
     try {
       let mainContentBox = new St.BoxLayout({
         vertical: false
@@ -217,18 +207,20 @@ NewImageDialog.prototype = {
         action: Lang.bind(this, function () {
           this.close();
         }),
-      }, 
+      },
       {
-        label: _("OK"),
+        label: _("Pull"),
         action: Lang.bind(this, function () {
-          this.close();
+          this._docker.startContainer(230);
+          this.showNotification(_('Image ' + name + ' pulled'));
+          this.refreshApplet();
         })
       }]);
 
       this.open();
       // this._imageNameClutter = this._imageName.clutter_text;
       // this._imageNameClutter.connect("key-release-event", Lang.bind(this, this._onKeyPressEvent));
-      this._imageName.set_text('asfasf');
+      // this._imageName.set_text('asfasf');
       this._imageName.grab_key_focus();
       // this._searchDelay = new Date().getTime();
     } catch (e) {
