@@ -4,6 +4,8 @@ const St = imports.gi.St;
 const Main = imports.ui.main;
 const MessageTray = imports.ui.messageTray;
 const PopupMenu = imports.ui.popupMenu;
+const Clutter = imports.gi.Clutter;
+const ModalDialog = imports.ui.modalDialog;
 const UUID = 'dockerruler@marekjam';
 
 let Docker;
@@ -84,6 +86,12 @@ MyApplet.prototype = {
 
     this.subMenuImages = new PopupMenu.PopupSubMenuMenuItem('Images');
 
+    this.subMenuImages.menu.addMenuItem(this.createPopupIconMenuItem(
+      _('Pull image'),
+      'document-save',
+      this.openDialog
+    ));
+
     if (images.length == 0) {
       this.subMenuImages.menu.addMenuItem(this.createPopupMenuItem(
         _('No images found.')
@@ -91,7 +99,7 @@ MyApplet.prototype = {
     } else {
       for (var i = 0; i < images.length; i++) {
         let image = images[i];
-        this.subMenuImages.menu.addMenuItem(this.createPopupMenuItem(_(image.repository+":"+image.tag)));
+        this.subMenuImages.menu.addMenuItem(this.createPopupMenuItem(_(image.repository + ":" + image.tag)));
       }
     }
 
@@ -137,6 +145,10 @@ MyApplet.prototype = {
     }
   },
 
+  openDialog: function () {
+    let dialog = new NewImageDialog(Lang.bind(this, function () { }));
+  },
+
   _onContainerClicked: function (actor, event) {
     let button = event.get_button();
     this.showNotification(this.isRunning.toString());
@@ -147,6 +159,109 @@ MyApplet.prototype = {
     // }
     return true;
   },
+};
+
+
+function NewImageDialog() {
+  this._init.apply(this, arguments);
+}
+
+NewImageDialog.prototype = {
+  __proto__: ModalDialog.ModalDialog.prototype,
+
+  _init: function (aCallback) {
+    ModalDialog.ModalDialog.prototype._init.call(this, {
+      styleClass: null
+    });
+    this._callback = aCallback;
+    try {
+      let mainContentBox = new St.BoxLayout({
+        vertical: false
+      });
+
+      this.contentLayout.add(mainContentBox, {
+        x_fill: true,
+        y_fill: true
+      });
+
+      let messageBox = new St.BoxLayout({
+        vertical: true
+      });
+
+      mainContentBox.add(messageBox, {
+        y_align: St.Align.START
+      });
+
+      this._subjectLabel = new St.Label({
+        text: _("Pull image - registry/image:tag")
+      });
+
+      messageBox.add(this._subjectLabel, {
+        y_fill: false,
+        y_align: St.Align.START
+      });
+
+      this._imageName = new St.Entry({
+        style_class: 'image-pull',
+        track_hover: true,
+        can_focus: true
+      });
+
+      messageBox.add(this._imageName, {
+        y_fill: false,
+        y_align: St.Align.START
+      });
+
+      this.setButtons([{
+        label: _("Cancel"),
+        action: Lang.bind(this, function () {
+          this.close();
+        }),
+      }, 
+      {
+        label: _("OK"),
+        action: Lang.bind(this, function () {
+          this.close();
+        })
+      }]);
+
+      this.open();
+      // this._imageNameClutter = this._imageName.clutter_text;
+      // this._imageNameClutter.connect("key-release-event", Lang.bind(this, this._onKeyPressEvent));
+      this._imageName.set_text('asfasf');
+      this._imageName.grab_key_focus();
+      // this._searchDelay = new Date().getTime();
+    } catch (e) {
+      global.log(e);
+    }
+  },
+
+  _onKeyPressEvent: function (actor, event) {
+    // try {
+    //   let searchTerm = this._imageSearch.text;
+    //   if (searchTerm == '') {
+    //     return false;
+    //   }
+    //   let key = event.get_key_symbol();
+    //   if (this._timer && this._timer > 0) {
+    //     Mainloop.source_remove(this._timer);
+    //     this._timer = 0;
+    //   }
+    //   if (key == Clutter.Return) {
+    //     this.imageSearch(searchTerm, Lang.bind(this, this.displayResults));
+    //   } else {
+    //     this._timer = Mainloop.timeout_add(2000, Lang.bind(this, function () {
+    //       this.imageSearch(searchTerm, Lang.bind(this, this.displayResults));
+    //       this._timer = 0;
+    //       return false;
+    //     }));
+    //   }
+    // } catch (e) {
+    //   global.log(e);
+    // }
+    return false;
+  },
+
 };
 
 function main(metadata, orientation, panelHeight, instanceId) {
