@@ -6,7 +6,13 @@ const MessageTray = imports.ui.messageTray;
 const PopupMenu = imports.ui.popupMenu;
 const Clutter = imports.gi.Clutter;
 const ModalDialog = imports.ui.modalDialog;
+const Cinnamon = imports.gi.Cinnamon;
+
 const UUID = 'dockerruler@marekjam';
+const APPLET_PATH = global.userdatadir + "/applets/" + UUID;
+const SETTINGS_FILE = APPLET_PATH + "/settings.json";
+const APPLET_NAME = "Docker Ruler";
+
 
 let Docker;
 if (typeof require !== 'undefined') {
@@ -14,11 +20,9 @@ if (typeof require !== 'undefined') {
 } else {
   Docker = imports.ui.appletManager.applets[UUID].docker;
 }
-let isAnyContainerRunning;
 
-function ConfirmDialog() {
-  this._init();
-}
+let jsonSettingsFileContent = Cinnamon.get_file_contents_utf8_sync(SETTINGS_FILE);
+let settings = JSON.parse(jsonSettingsFileContent);
 
 function MyApplet(orientation, panelHeight, instanceId) {
   this._init(orientation, panelHeight, instanceId);
@@ -30,8 +34,6 @@ MyApplet.prototype = {
   _init: function (orientation, panelHeight, instanceId) {
     Applet.IconApplet.prototype._init.call(this, orientation, panelHeight, instanceId);
 
-    this._msgsource = new MessageTray.SystemNotificationSource("Docker Ruler");
-    Main.messageTray.add(this._msgsource);
     this.set_applet_icon_name("inactive");
 
     this.set_applet_tooltip("Control docker containers");
@@ -112,11 +114,6 @@ MyApplet.prototype = {
     this.menu.toggle();
   },
 
-  showNotification: function (message) {
-    let notification = new MessageTray.Notification(this._msgsource, "Docker Ruler", message);
-    this._msgsource.notify(notification);
-  },
-
   createPopupIconMenuItem: function (label, icon, callback) {
     let item = new PopupMenu.PopupIconMenuItem(label, icon, St.IconType.FULLCOLOR);
     if (callback) {
@@ -136,11 +133,11 @@ MyApplet.prototype = {
   switchContainerStatus: function (isRunning, name) {
     if (isRunning) {
       this.docker.stopContainer(name);
-      this.showNotification(_('Container ' + name + ' stopped'));
+      Main.notify(_(APPLET_NAME), _('Container ' + name + ' stopped'));
       this.refreshApplet();
     } else {
       this.docker.startContainer(name);
-      this.showNotification(_('Container ' + name + ' started'));
+      Main.notify(_(APPLET_NAME), _('Container ' + name + ' started'));
       this.refreshApplet();
     }
   },
@@ -163,7 +160,7 @@ NewImageDialog.prototype = {
       styleClass: null
     });
     this._docker = docker;
-    // this._showNotification = showNotification;
+
     try {
       let mainContentBox = new St.BoxLayout({
         vertical: false
@@ -183,7 +180,7 @@ NewImageDialog.prototype = {
       });
 
       this._subjectLabel = new St.Label({
-        text: _("Pull image - registry/image:tag")
+        text: _("Pull image - repository/image:tag")
       });
 
       messageBox.add(this._subjectLabel, {
@@ -202,7 +199,7 @@ NewImageDialog.prototype = {
         y_align: St.Align.START
       });
 
-      this.setButtons([{
+      this.addButtons([{
         label: _("Cancel"),
         action: Lang.bind(this, function () {
           this.close();
@@ -210,48 +207,26 @@ NewImageDialog.prototype = {
       },
       {
         label: _("Pull"),
-        action: Lang.bind(this, function () {
-          this._docker.startContainer(230);
-          this.showNotification(_('Image ' + name + ' pulled'));
-          this.refreshApplet();
-        })
+        action: Lang.bind(this, this.pullImage)
       }]);
 
       this.open();
-      // this._imageNameClutter = this._imageName.clutter_text;
-      // this._imageNameClutter.connect("key-release-event", Lang.bind(this, this._onKeyPressEvent));
-      // this._imageName.set_text('asfasf');
+      this._imageName.set_text(settings.defaultPullString);
       this._imageName.grab_key_focus();
-      // this._searchDelay = new Date().getTime();
     } catch (e) {
       global.log(e);
     }
   },
 
-  _onKeyPressEvent: function (actor, event) {
-    // try {
-    //   let searchTerm = this._imageSearch.text;
-    //   if (searchTerm == '') {
-    //     return false;
-    //   }
-    //   let key = event.get_key_symbol();
-    //   if (this._timer && this._timer > 0) {
-    //     Mainloop.source_remove(this._timer);
-    //     this._timer = 0;
-    //   }
-    //   if (key == Clutter.Return) {
-    //     this.imageSearch(searchTerm, Lang.bind(this, this.displayResults));
-    //   } else {
-    //     this._timer = Mainloop.timeout_add(2000, Lang.bind(this, function () {
-    //       this.imageSearch(searchTerm, Lang.bind(this, this.displayResults));
-    //       this._timer = 0;
-    //       return false;
-    //     }));
-    //   }
-    // } catch (e) {
-    //   global.log(e);
-    // }
-    return false;
+  addButtons: function (buttons){
+    this.setButtons(buttons);
+  },
+
+  pullImage: function () {
+    let image = this._imageName.get_text();
+    Main.notify(_(APPLET_NAME), 'Pulling image: ' + _(image));
+    this._docker.pullImage(image);
+    this.close();
   },
 
 };
